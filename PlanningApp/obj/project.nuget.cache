@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "VqEoAVPXLS4=",
+  "success": true,
+  "projectFilePath": "C:\\GITHUB\\PlanningApp\\PlanningApp\\PlanningApp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\grzes\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.8\\microsoft.aspnetcore.app.internal.assets.10.0.8.nupkg.sha512"
+  ],
+  "logs": []
+}
