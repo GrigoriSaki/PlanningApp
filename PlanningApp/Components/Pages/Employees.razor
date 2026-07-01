@@ -1,0 +1,140 @@
+﻿@using PlanningApp.Services
+@using PlanningApp.Models
+
+@page "/employees"
+@inject EmployeeService EmployeeService
+
+<PageTitle>Employees</PageTitle>
+
+
+
+@code {
+	private List<Employee> employees = new();
+	private Employee newEmployee = new Employee();
+	private Employee formEmployee = new();
+	private bool isEditing = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		employees = await EmployeeService.GetAllAsync();
+	}
+
+	private async Task AddEmployee()
+	{
+		await EmployeeService.AddAsync(newEmployee);
+		employees = await EmployeeService.GetAllAsync();
+		newEmployee = new Employee();
+	}
+
+	private async Task DeleteEmployee(Employee employeeToDelete)
+	{
+		await EmployeeService.DeleteAsync(employeeToDelete);
+		employees = await EmployeeService.GetAllAsync();
+	}
+
+	private async Task UpdateEmployee(Employee employee)
+	{
+		await EmployeeService.EditAsync(employee);
+		employees = await EmployeeService.GetAllAsync();
+	}
+
+	private void EditEmployee(Employee employee)
+	{
+		formEmployee = new Employee
+		{
+			Id = employee.Id,
+			FirstName = employee.FirstName,
+			LastName = employee.LastName,
+			IsActive = employee.IsActive
+		};
+
+		isEditing = true;
+	}
+
+	private void CancelEdit()
+	{
+		newEmployee = new Employee();
+		isEditing = false;
+	}
+
+}
+
+<div class="container-fluid px-4 mt-4">
+<EditForm Model ="@newEmployee" OnValidSubmit="AddEmployee">
+
+	<DataAnnotationsValidator/>
+	<ValidationSummary/>
+	
+	<div style="max-width: 800px">
+	<div class="mb-3">
+		<label class="form-label">First Name</label>
+		<InputText class="form-control"
+			@bind-Value="newEmployee.FirstName"/>
+	</div>
+	
+	<div class="mb-3">
+		<label class="form-label">Last Name</label>
+		<InputText class="form-control"
+			@bind-Value="newEmployee.LastName"/>
+	</div>
+
+	<div class="form-check mb-3">
+
+		<InputCheckbox class="form-check-input"
+			@bind-Value="newEmployee.IsActive"/>
+
+			<label class="form-check-label">
+				Active
+			</label>
+	</div>
+
+			@if (!isEditing)
+			{
+				<button class="btn btn-primary">
+					Add Employee
+				</button>
+			}
+			else
+			{
+				<button class="btn btn-success">
+					Update Employee
+				</button>
+
+				<button class="btn btn-secondary">
+					Cancel
+				</button>
+			}
+	</div>
+</EditForm>
+
+<h2 class="mt-4">Tu będzie lista pracownikow</h2>
+
+<table class="table table-striped table-hover mt-4">
+	<thead>
+		<tr>
+			<th>First Name</th>
+			<th>Last Name</th>
+			<th>IsActive</th>
+		</tr>
+	</thead>
+
+	<tbody>
+@foreach (var e in employees)
+		{
+			<tr>
+				<td>@e.FirstName</td>
+				<td>@e.LastName</td>
+				<td>@e.IsActive</td>
+				<td class="text-end">
+						<button class="btn btn-danger" @onclick="() => DeleteEmployee(e)">
+							Delete
+						</button>
+					<button class="btn btn-secondary" @onclick="() => EditEmployee(e)">
+						Delete
+					</button>
+				</td>
+			</tr>
+		}
+	</tbody>
+	</table>
+</div>
