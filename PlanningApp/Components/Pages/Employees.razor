@@ -3,6 +3,7 @@
 
 @page "/employees"
 @inject EmployeeService EmployeeService
+@inject IJSRuntime JS
 
 <PageTitle>Employees</PageTitle>
 
@@ -10,8 +11,7 @@
 
 @code {
 	private List<Employee> employees = new();
-	private Employee newEmployee = new Employee();
-	private Employee formEmployee = new();
+	private Employee formEmployee = new Employee();
 	private bool isEditing = false;
 
 	protected override async Task OnInitializedAsync()
@@ -19,23 +19,17 @@
 		employees = await EmployeeService.GetAllAsync();
 	}
 
-	private async Task AddEmployee()
-	{
-		await EmployeeService.AddAsync(newEmployee);
-		employees = await EmployeeService.GetAllAsync();
-		newEmployee = new Employee();
-	}
-
 	private async Task DeleteEmployee(Employee employeeToDelete)
 	{
-		await EmployeeService.DeleteAsync(employeeToDelete);
-		employees = await EmployeeService.GetAllAsync();
-	}
+		bool confirmed = await JS.InvokeAsync<bool>(
+		"confirm",
+		$"Are you sure you want to delete  {employeeToDelete.FirstName} {employeeToDelete.LastName}?");
 
-	private async Task UpdateEmployee(Employee employee)
-	{
-		await EmployeeService.EditAsync(employee);
-		employees = await EmployeeService.GetAllAsync();
+		if (confirmed)
+		{
+			await EmployeeService.DeleteAsync(employeeToDelete);
+			employees = await EmployeeService.GetAllAsync();
+		}
 	}
 
 	private void EditEmployee(Employee employee)
@@ -53,15 +47,29 @@
 
 	private void CancelEdit()
 	{
-		newEmployee = new Employee();
+		formEmployee = new Employee();
 		isEditing = false;
 	}
 
+	private async Task SaveEmployee()
+	{
+		if (isEditing)
+		{
+			await EmployeeService.EditAsync(formEmployee);
+		}
+		else
+		{
+			await EmployeeService.AddAsync(formEmployee);
+		}
+		employees = await EmployeeService.GetAllAsync();
+		formEmployee = new Employee();
+
+		isEditing = false;
+	}
 }
 
 <div class="container-fluid px-4 mt-4">
-<EditForm Model ="@newEmployee" OnValidSubmit="AddEmployee">
-
+<EditForm Model ="@formEmployee" OnValidSubmit="SaveEmployee">
 	<DataAnnotationsValidator/>
 	<ValidationSummary/>
 	
@@ -69,45 +77,36 @@
 	<div class="mb-3">
 		<label class="form-label">First Name</label>
 		<InputText class="form-control"
-			@bind-Value="newEmployee.FirstName"/>
+			@bind-Value="formEmployee.FirstName"/>
 	</div>
 	
 	<div class="mb-3">
 		<label class="form-label">Last Name</label>
 		<InputText class="form-control"
-			@bind-Value="newEmployee.LastName"/>
+			@bind-Value="formEmployee.LastName"/>
 	</div>
 
 	<div class="form-check mb-3">
 
 		<InputCheckbox class="form-check-input"
-			@bind-Value="newEmployee.IsActive"/>
+			@bind-Value="formEmployee.IsActive"/>
 
 			<label class="form-check-label">
 				Active
 			</label>
 	</div>
-
-			@if (!isEditing)
-			{
-				<button class="btn btn-primary">
-					Add Employee
+				<button class="btn @(isEditing ? "btn-success" : "btn-primary")">
+					@(isEditing ? "Update Employee" : "Add Employee")
 				</button>
-			}
-			else
-			{
-				<button class="btn btn-success">
-					Update Employee
-				</button>
-
-				<button class="btn btn-secondary">
+			
+@if (isEditing) {
+				<button type="button" class="btn btn-secondary ms-2" @onclick="CancelEdit">
 					Cancel
-				</button>
-			}
+				</button> }
 	</div>
 </EditForm>
 
-<h2 class="mt-4">Tu będzie lista pracownikow</h2>
+<h2 class="mt-4">List of employees</h2>
 
 <table class="table table-striped table-hover mt-4">
 	<thead>
@@ -130,7 +129,7 @@
 							Delete
 						</button>
 					<button class="btn btn-secondary" @onclick="() => EditEmployee(e)">
-						Delete
+						Edit
 					</button>
 				</td>
 			</tr>

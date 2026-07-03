@@ -10,7 +10,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 //Entity framework
-builder.Services.AddDbContext<PlanningDbContext>(options =>
+builder.Services.AddDbContextFactory<PlanningDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 

@@ -6,34 +6,38 @@ namespace PlanningApp.Services
 {
     public class EmployeeService
     {
-        private readonly PlanningDbContext _context;
+        private readonly IDbContextFactory <PlanningDbContext> _contextFactory;
 
-        public EmployeeService(PlanningDbContext context) 
+        public EmployeeService(IDbContextFactory<PlanningDbContext> context) 
         {
-            _context = context;
+            _contextFactory = context;
         }
 
         public async Task<List<Employee>> GetAllAsync() 
         {
-            return await _context.Employees.OrderBy(e => e.LastName).ToListAsync();
+            await using var context = _contextFactory.CreateDbContext();
+            return await context.Employees.OrderBy(e => e.LastName).ToListAsync();
         }
 
         public async Task AddAsync(Employee employee) 
         {
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
+            await using var context = _contextFactory.CreateDbContext();
+            context.Employees.Add(employee);
+            await context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Employee employee) 
         {
-            _context.Employees.Remove(employee);
-            await _context.SaveChangesAsync();
+            await using var context = _contextFactory.CreateDbContext();
+            context.Employees.Remove(employee);
+            await context.SaveChangesAsync();
         }
 
         public async Task EditAsync(Employee employee)
         {
-            _context.Employees.Update(employee);
-            await _context.SaveChangesAsync();
+            await using var context = _contextFactory.CreateDbContext();
+            context.Employees.Update(employee);
+            await context.SaveChangesAsync();
         }
     }
 }
