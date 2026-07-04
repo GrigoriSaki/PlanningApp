@@ -1,9 +1,62 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<div class="d-flex min-vh-100">
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <aside class="text-white p-3 flex-shrink-0" style="width: 260px; background: linear-gradient(135deg, #115e59 0%, #0f766e 100%);">
+
+        <div class="d-flex align-items-center mb-4 pb-3 border-bottom border-white" style="--bs-border-opacity: .3;">
+            <span class="fs-4 fw-bold">📅 PlanningApp</span>
+        </div>
+
+        <ul class="nav nav-pills flex-column gap-2 w-100">
+            <li class="nav-item">
+                <NavLink class="nav-link text-white text-start d-flex align-items-center gap-3 p-2"
+                         ActiveClass="bg-white bg-opacity-25 fw-bold"
+                         style="background-color: transparent;"
+                         onmouseover="if(!this.classList.contains('active')) this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                         onmouseout="this.style.backgroundColor='transparent'"
+                         href="/dashboard"
+                         Match="NavLinkMatch.All">
+                    <span class="fs-5">📊</span> Dashboard
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white text-start d-flex align-items-center gap-3 p-2"
+                         ActiveClass="bg-white bg-opacity-25 fw-bold"
+                         style="background-color: transparent;"
+                         onmouseover="if(!this.classList.contains('active')) this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                         onmouseout="this.style.backgroundColor='transparent'"
+                         href="/planning">
+                    <span class="fs-5">🗓️</span> Planning
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white text-start d-flex align-items-center gap-3 p-2"
+                         ActiveClass="bg-white bg-opacity-25 fw-bold"
+                         style="background-color: transparent;"
+                         onmouseover="if(!this.classList.contains('active')) this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                         onmouseout="this.style.backgroundColor='transparent'"
+                         href="/employees">
+                    <span class="fs-5">👷</span> Employees
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white text-start d-flex align-items-center gap-3 p-2"
+                         ActiveClass="bg-white bg-opacity-25 fw-bold"
+                         style="background-color: transparent;"
+                         onmouseover="if(!this.classList.contains('active')) this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                         onmouseout="this.style.backgroundColor='transparent'"
+                         href="/production-lines">
+                    <span class="fs-5">⚙️</span> Production Lines
+                </NavLink>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="flex-grow-1 bg-light p-4" style="overflow-y: auto;">
+
+        @Body
+
+    </main>
+
 </div>

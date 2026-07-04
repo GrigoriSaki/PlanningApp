@@ -39,6 +39,7 @@
 			Id = employee.Id,
 			FirstName = employee.FirstName,
 			LastName = employee.LastName,
+			DefaultPosition = employee.DefaultPosition,
 			IsActive = employee.IsActive
 		};
 
@@ -86,6 +87,12 @@
 			@bind-Value="formEmployee.LastName"/>
 	</div>
 
+	<div class="mb-3">
+		<label class="form-label">Default Position</label>
+		<InputText class="form-control"
+			@bind-Value="formEmployee.DefaultPosition" />
+	</div>
+
 	<div class="form-check mb-3">
 
 		<InputCheckbox class="form-check-input"
@@ -113,6 +120,7 @@
 		<tr>
 			<th>First Name</th>
 			<th>Last Name</th>
+			<th>Default Position</th>
 			<th>IsActive</th>
 		</tr>
 	</thead>
@@ -123,7 +131,21 @@
 			<tr>
 				<td>@e.FirstName</td>
 				<td>@e.LastName</td>
-				<td>@e.IsActive</td>
+				<td>@e.DefaultPosition</td>
+					<td class="align-middle">
+						@if (e.IsActive)
+						{
+							<span class="badge rounded-circle bg-success p-2 d-inline-block"
+								  style="width: 12px; height: 12px;"
+								  title="Active"></span>
+						}
+						else
+						{
+							<span class="badge rounded-circle bg-danger p-2 d-inline-block"
+								  style="width: 12px; height: 12px;"
+								  title="Inactive"></span>
+						}
+					</td>
 				<td class="text-end">
 						<button class="btn btn-danger" @onclick="() => DeleteEmployee(e)">
 							Delete

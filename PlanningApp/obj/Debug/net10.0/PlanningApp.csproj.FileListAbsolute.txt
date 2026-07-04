@@ -33,7 +33,6 @@ C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\staticwebassets.build.json.c
 C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\staticwebassets.development.json
 C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\staticwebassets.build.endpoints.json
 C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\swae.build.ex.cache
-C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
 C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\PlanningApp.dll
 C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\refint\PlanningApp.dll
 C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\PlanningApp.pdb
@@ -167,3 +166,4 @@ C:\GITHUB\PlanningApp\PlanningApp\bin\Debug\net10.0\runtimes\win-x64\native\Micr
 C:\GITHUB\PlanningApp\PlanningApp\bin\Debug\net10.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
 C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\PlanningApp.csproj.AssemblyReference.cache
 C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\Planning.53449C4B.Up2Date
+C:\GITHUB\PlanningApp\PlanningApp\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
