@@ -1,0 +1,147 @@
+﻿@using PlanningApp.Services
+@using PlanningApp.Models
+
+@page "/production-lines"
+@inject ProductionLineService ProductionLineService
+@inject IJSRuntime JS
+
+@code {
+	private List<ProductionLine> productionLines = new();
+	private ProductionLine formLines = new ProductionLine();
+	private bool isEditing = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		productionLines = await ProductionLineService.GetAllAsync();
+	}
+
+	private async Task DeleteLine(ProductionLine lineToDelete)
+	{
+		bool confirmed = await JS.InvokeAsync<bool>(
+		"confirm",
+		$"Are you sure you want to delete  {lineToDelete.Name}?");
+
+		if (isEditing && formLines!=null && formLines.Id == lineToDelete.Id) 
+		{ CancelEdit(); }
+
+		if (confirmed)
+		{
+			await ProductionLineService.DeleteAsync(lineToDelete);
+			productionLines = await ProductionLineService.GetAllAsync();
+		}
+	}
+
+	private void EditLine(ProductionLine line)
+	{
+		formLines = new ProductionLine
+		{
+			Id = line.Id,
+			Name = line.Name,
+			IsActive = line.IsActive
+		};
+
+		isEditing = true;
+	}
+
+	private void CancelEdit()
+	{
+		formLines = new ProductionLine();
+		isEditing = false;
+	}
+
+	private async Task SaveLine()
+	{
+		if (isEditing)
+		{
+			await ProductionLineService.EditAsync(formLines);
+		}
+		else
+		{
+			await ProductionLineService.AddAsync(formLines);
+		}
+		productionLines = await ProductionLineService.GetAllAsync();
+		formLines = new ProductionLine();
+
+		isEditing = false;
+	}
+}
+
+
+
+<div class="container-fluid px-4 pt-2">
+	<h1 class="fw-bold text-dark mb-2">Production Lines</h1>
+	<EditForm Model="@formLines" OnValidSubmit="SaveLine">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+
+		<div style="max-width: 800px">
+			<div class="mb-3">
+				<label class="form-label">First Name</label>
+				<InputText class="form-control"
+						   @bind-Value="formLines.Name" />
+			</div>
+
+			<div class="form-check mb-3">
+
+				<InputCheckbox class="form-check-input"
+							   @bind-Value="formLines.IsActive" />
+
+				<label class="form-check-label">
+					Active
+				</label>
+			</div>
+			<button class="btn @(isEditing ? "btn-success" : "btn-primary")">
+				@(isEditing ? "Update Line" : "Add Line")
+			</button>
+
+			@if (isEditing)
+			{
+				<button type="button" class="btn btn-secondary ms-2" @onclick="CancelEdit">
+					Cancel
+				</button>
+			}
+		</div>
+	</EditForm>
+
+	<h2 class="mt-4">List of lines</h2>
+
+	<table class="table table-striped table-hover mt-4">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>IsActive</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			@foreach (var e in productionLines)
+			{
+				<tr>
+					<td>@e.Name</td>
+					<td class="align-middle">
+						@if (e.IsActive)
+						{
+							<span class="badge rounded-circle bg-success p-2 d-inline-block"
+								  style="width: 12px; height: 12px;"
+								  title="Active"></span>
+						}
+						else
+						{
+							<span class="badge rounded-circle bg-danger p-2 d-inline-block"
+								  style="width: 12px; height: 12px;"
+								  title="Inactive"></span>
+						}
+					</td>
+					<td class="text-end">
+						<button class="btn btn-danger" @onclick="() => DeleteLine(e)">
+							Delete
+						</button>
+						<button class="btn btn-secondary" @onclick="() => EditLine(e)">
+							Edit
+						</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>

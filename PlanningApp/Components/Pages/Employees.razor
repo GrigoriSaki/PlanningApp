@@ -25,6 +25,9 @@
 		"confirm",
 		$"Are you sure you want to delete  {employeeToDelete.FirstName} {employeeToDelete.LastName}?");
 
+		if (isEditing && formEmployee != null && formEmployee.Id == formEmployee.Id)
+		{ CancelEdit(); }
+
 		if (confirmed)
 		{
 			await EmployeeService.DeleteAsync(employeeToDelete);
@@ -69,7 +72,9 @@
 	}
 }
 
-<div class="container-fluid px-4 mt-4">
+<div class="container-fluid px-4 pt-2">
+	<h1 class="fw-bold text-dark mb-2">Employees</h1>
+	
 <EditForm Model ="@formEmployee" OnValidSubmit="SaveEmployee">
 	<DataAnnotationsValidator/>
 	<ValidationSummary/>
