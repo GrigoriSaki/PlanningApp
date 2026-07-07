@@ -17,6 +17,7 @@ builder.Services.AddDbContextFactory<PlanningDbContext>(options =>
 //own services
 builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<ProductionLineService>();
+builder.Services.AddScoped<PlanningService>();
 
 var app = builder.Build();
 

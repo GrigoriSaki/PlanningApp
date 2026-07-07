@@ -1,0 +1,86 @@
+﻿@using PlanningApp.Services
+@using PlanningApp.Models
+
+@page "/planning"
+@inject PlanningService PlanningService
+@inject EmployeeService EmployeeService
+@inject ProductionLineService ProductionLineService
+@inject IJSRuntime JS
+
+<PageTitle>Planning</PageTitle>
+
+@code {
+	private DateTime selectedWeek = DateTime.Today;
+
+	private List<ScheduleAssignment> assignments = new();
+
+	private List<Employee> employees = new();
+
+	private List<ProductionLine> productionLines = new();
+	private DateTime monday;
+
+	protected override async Task OnInitializedAsync()
+	{
+		assignments = await PlanningService.GetWeekPlanningAsync(selectedWeek);
+
+		employees = await EmployeeService.GetAllAsync();
+
+		productionLines = await ProductionLineService.GetAllAsync();
+
+		monday = GetStartOfWeek(DateTime.Today);
+	}
+	private readonly List<string> positions =
+[
+	"Team Leader",
+	"Operator 1",
+	"Operator 2",
+	"Machine Operator",
+	"Sticker",
+	"Quality",
+	"Worker 1",
+	"Worker 2",
+	"Worker 3",
+	"Worker 4"
+];
+
+	private DateTime GetStartOfWeek(DateTime date)
+	{
+		int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+		return date.AddDays(-diff).Date;
+	}
+
+	private List<DateTime> WeekDays =>
+[
+	monday,
+	monday.AddDays(1),
+	monday.AddDays(2),
+	monday.AddDays(3),
+	monday.AddDays(4),
+	monday.AddDays(5),
+	monday.AddDays(6)
+];
+}
+
+<div class="container-fluid px-4 pt-2">
+	<h1 class="fw-bold text-dark mb-2">Planning</h1>
+	<h3 class="text-dark mb-2">Week: @monday.ToString("dd.MM.yyyy") - @monday.AddDays(6).ToString("dd.MM.yyyy")</h3>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Position</th>
+
+				@foreach (var day in WeekDays)
+				{
+					<th>
+						@day.ToString("ddd")
+						<br />
+						<span class="fw-light text-muted" style="font-size: 0.95rem;">
+							@day.ToString("dd.MM")
+						</span>
+					</th>
+				}
+			</tr>
+		</thead>
+	</table>
+</div>
