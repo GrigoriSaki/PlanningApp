@@ -8,7 +8,6 @@ namespace PlanningApp.Services
     public class PlanningService
     {
         private readonly IDbContextFactory<PlanningDbContext> _contextFactory;
-
         public PlanningService(IDbContextFactory<PlanningDbContext> context)
         {
             _contextFactory = context;
@@ -34,11 +33,21 @@ namespace PlanningApp.Services
         //Przypisanie pracownika z imienia i nazwiska do konkretnej komórki w planingu
         public async Task AssignEmployeeAsync(DateTime workDate, int shift, int productionLineId, string position, int? employeeId) 
         {
+            var start = workDate.Date;  
+
+            if (employeeId.HasValue) 
+            {
+                bool canAssign = await CanAssignEmployeeAsync(employeeId.Value, start, shift);
+
+                if (!canAssign) 
+                {
+                    throw new InvalidOperationException(
+                    "Employee is already assigned to another shift on this day.");
+                }
+            }
+
             await using var context = _contextFactory.CreateDbContext();
-
-            var start = workDate.Date;
             var end = start.AddDays(1);
-
             var assignment = await context.ScheduleAssignments
                 .FirstOrDefaultAsync(x => x.WorkDate >= start && x.WorkDate < end &&
                 x.Shift == shift &&
@@ -63,12 +72,6 @@ namespace PlanningApp.Services
                 assignment.EmployeeId = employeeId; 
             }
             await context.SaveChangesAsync();
-        }
-
-
-        public async Task UnassignEmployeeAsync(int assignmentId) 
-        {
-            await using var context = _contextFactory.CreateDbContext();
         }
 
         //Walidacja przed przypisaniem pracownika
