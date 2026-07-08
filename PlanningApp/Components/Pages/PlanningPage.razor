@@ -1,5 +1,6 @@
 ﻿@using PlanningApp.Services
 @using PlanningApp.Models
+@using PlanningApp.Planning
 
 @page "/planning"
 @inject PlanningService PlanningService
@@ -29,20 +30,6 @@
 
 		monday = GetStartOfWeek(DateTime.Today);
 	}
-	private readonly List<string> positions =
-[
-	"Team Leader",
-	"Operator 1",
-	"Operator 2",
-	"Machine Operator",
-	"Sticker",
-	"Quality",
-	"Worker 1",
-	"Worker 2",
-	"Worker 3",
-	"Worker 4"
-];
-
 	private DateTime GetStartOfWeek(DateTime date)
 	{
 		int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
@@ -59,28 +46,59 @@
 	monday.AddDays(5),
 	monday.AddDays(6)
 ];
+
+	private ScheduleAssignment? GetAssignment(
+		DateTime day,
+		int shift,
+		int productionLineId,
+		string position)
+	{
+		return assignments.FirstOrDefault(x =>
+			x.WorkDate.Date == day.Date &&
+			x.Shift == shift &&
+			x.ProductionLineId == productionLineId &&
+			x.PositionOnLine == position);
+	}
 }
 
 <div class="container-fluid px-4 pt-2">
 	<h1 class="fw-bold text-dark mb-2">Planning</h1>
-	<h3 class="text-dark mb-2">Week: @monday.ToString("dd.MM.yyyy") - @monday.AddDays(6).ToString("dd.MM.yyyy")</h3>
+	<h5 class="text-dark mb-2">Week: @monday.ToString("dd.MM.yyyy") - @monday.AddDays(6).ToString("dd.MM.yyyy")</h5>
 
-	<table class="table">
-		<thead>
-			<tr>
-				<th>Position</th>
+@foreach (var line in productionLines)
+	{
+		<h3>line: @line.Name</h3>
+		<table class="table table-bordered table-hover">
+			<thead>
+				<tr>
+					<th style="width: 200px;">Position</th>
 
-				@foreach (var day in WeekDays)
+					@foreach (var day in WeekDays)
+					{
+						<th>
+							@day.ToString("ddd")
+							<br />
+							<span class="fw-light text-muted" style="font-size: 0.95rem;">
+								@day.ToString("dd.MM")
+							</span>
+						</th>
+					}
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var position in PlanningPositions.All)
 				{
-					<th>
-						@day.ToString("ddd")
-						<br />
-						<span class="fw-light text-muted" style="font-size: 0.95rem;">
-							@day.ToString("dd.MM")
-						</span>
-					</th>
+					<tr>
+						<th scope="row">@position</th>
+
+						@foreach (var day in WeekDays)
+						{
+							var assignment = GetAssignment(day, 1, line.Id, position);
+							<td>@assignment?.Employee.FirstName</td>
+						}
+					</tr>
 				}
-			</tr>
-		</thead>
-	</table>
+			</tbody>
+		</table>
+	}
 </div>
