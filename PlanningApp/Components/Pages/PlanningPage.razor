@@ -12,13 +12,14 @@
 
 @code {
 	private DateTime selectedWeek = DateTime.Today;
-
 	private List<ScheduleAssignment> assignments = new();
-
 	private List<Employee> employees = new();
-
 	private List<ProductionLine> productionLines = new();
 	private DateTime monday;
+	private PlanningCell? selectedCell;
+	private bool isPopupVisible = false;
+	private double mouseX;
+	private double mouseY;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -59,13 +60,56 @@
 			x.ProductionLineId == productionLineId &&
 			x.PositionOnLine == position);
 	}
+
+	private void SelectCell(
+	MouseEventArgs e,
+	DateTime day,
+	int shift,
+	int lineId,
+	string position)
+	{
+		selectedCell = new PlanningCell
+		{
+			WorkDate = day,
+			Shift = shift,
+			ProductionLineId = lineId,
+			Position = position
+		};
+
+		mouseX = e.ClientX + 10;
+		mouseY = e.ClientY + 10;
+
+		isPopupVisible = true;
+	}
+
+	private void ClosePopup()
+	{
+		isPopupVisible = false;
+	}
+
+	private async Task AssignEmployee(int employeeId)
+	{
+		if (selectedCell == null)
+			return;
+
+		await PlanningService.AssignEmployeeAsync(
+		selectedCell.WorkDate,
+		selectedCell.Shift,
+		selectedCell.ProductionLineId,
+		selectedCell.Position,
+		employeeId);
+
+		assignments = await PlanningService.GetWeekPlanningAsync(selectedWeek);
+		selectedCell = null;
+		ClosePopup();
+	}
 }
 
 <div class="container-fluid px-4 pt-2">
 	<h1 class="fw-bold text-dark mb-2">Planning</h1>
 	<h5 class="text-dark mb-2">Week: @monday.ToString("dd.MM.yyyy") - @monday.AddDays(6).ToString("dd.MM.yyyy")</h5>
 
-@foreach (var line in productionLines)
+ @foreach (var line in productionLines)
 	{
 		<h3>line: @line.Name</h3>
 		<table class="table table-bordered table-hover">
@@ -93,12 +137,44 @@
 
 						@foreach (var day in WeekDays)
 						{
+							var currentDay = day;
 							var assignment = GetAssignment(day, 1, line.Id, position);
-							<td>@assignment?.Employee.FirstName</td>
+							<td @onclick="(e) => SelectCell(e,currentDay, 1, line.Id, position)" style="cursor: pointer;"
+								class="position-relative">
+								@assignment?.Employee.FirstName
+							</td>
 						}
 					</tr>
 				}
 			</tbody>
 		</table>
+	}
+	@if (isPopupVisible)
+	{
+		<div @onclick="ClosePopup"
+			 style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1040; background: transparent;">
+		</div>
+		<div class="card shadow-sm position-fixed" style="top: @(mouseY)px; left: @(mouseX)px; z-index: 1050; min-width: 200px;">
+			<div class="card-header d-flex justify-content-between align-items-center py-1 bg-light">
+				<div class="d-flex align-items-center gap-2 small">
+					<strong>@selectedCell.Position</strong>
+					<span class="text-muted">|</span>
+					<div>@selectedCell.WorkDate.ToString("dddd dd.MM")</div>
+					<span class="text-muted">|</span>
+					<div>Shift @selectedCell.Shift</div>
+				</div>
+				<button type="button" class="btn-close ms-3" style="font-size: 0.75rem;" @onclick="ClosePopup"></button>
+			</div>
+			<div class="list-group list-group-flush small" style="max-height: 200px; overflow-y: auto;">
+				@foreach (var employee in employees)
+				{
+					<button type="button"
+							class="list-group-item list-group-item-action py-1 px-2"
+							@onclick="() => AssignEmployee(employee.Id)">
+						@employee.FirstName @employee.LastName
+					</button>
+				}
+			</div>
+		</div>
 	}
 </div>
