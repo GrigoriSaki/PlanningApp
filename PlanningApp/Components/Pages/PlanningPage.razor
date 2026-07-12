@@ -103,13 +103,42 @@
 		selectedCell = null;
 		ClosePopup();
 	}
+
+	private async Task  UnassignEmployeeAsync()
+	{
+		if (selectedCell == null)
+			return;
+		
+		await PlanningService.UnassignEmployeeAsync(
+				selectedCell.WorkDate,
+				selectedCell.Shift,
+				selectedCell.ProductionLineId,
+				selectedCell.Position);
+
+		assignments = await PlanningService.GetWeekPlanningAsync(selectedWeek);
+		selectedCell = null;
+		ClosePopup();
+	}
 }
 
 <div class="container-fluid px-4 pt-2">
 	<h1 class="fw-bold text-dark mb-2">Planning</h1>
-	<h5 class="text-dark mb-2">Week: @monday.ToString("dd.MM.yyyy") - @monday.AddDays(6).ToString("dd.MM.yyyy")</h5>
+	<div class="d-flex align-items-center gap-2">
+		<h5 class="text-dark mb-0 me-2">Week:</h5>
+		<button type="button"
+				class="btn btn-sm d-flex align-items-center justify-content-center"
+				style="background-color: #dbf0ee; color: #115e59; border: 1px solid #a6d9d5; width: 28px; height: 28px; padding: 0;">
+			<i class="bi bi-chevron-left"></i>
+		</button>
+		<h5 class="text-dark mb-0">@monday.ToString("dd.MM.yyyy") - @monday.AddDays(6).ToString("dd.MM.yyyy")</h5>
+		<button type="button"
+				class="btn btn-sm d-flex align-items-center justify-content-center"
+				style="background-color: #dbf0ee; color: #115e59; border: 1px solid #a6d9d5; width: 28px; height: 28px; padding: 0;">
+			<i class="bi bi-chevron-right"></i>
+		</button>
+	</div>
 
- @foreach (var line in productionLines)
+	@foreach (var line in productionLines)
 	{
 		<h3>line: @line.Name</h3>
 		<table class="table table-bordered table-hover">
@@ -140,8 +169,16 @@
 							var currentDay = day;
 							var assignment = GetAssignment(day, 1, line.Id, position);
 							<td @onclick="(e) => SelectCell(e,currentDay, 1, line.Id, position)" style="cursor: pointer;"
-								class="position-relative">
-								@assignment?.Employee.FirstName
+								class="position-relative @(assignment != null ? "assigned" : "")">
+
+								@if (assignment != null)
+								{
+									@assignment.Employee.FirstName
+								}
+								else
+								{
+									<span class="text-muted">&nbsp;</span>
+								}
 							</td>
 						}
 					</tr>
@@ -166,6 +203,16 @@
 				<button type="button" class="btn-close ms-3" style="font-size: 0.75rem;" @onclick="ClosePopup"></button>
 			</div>
 			<div class="list-group list-group-flush small" style="max-height: 200px; overflow-y: auto;">
+				@if (GetAssignment(
+					selectedCell.WorkDate,
+					selectedCell.Shift,
+					selectedCell.ProductionLineId,
+					selectedCell.Position) != null)
+				{
+					<button class="btn btn-danger" @onclick="()=>UnassignEmployeeAsync()">
+						Unassign
+					</button>				
+				}
 				@foreach (var employee in employees)
 				{
 					<button type="button"

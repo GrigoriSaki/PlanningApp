@@ -1,0 +1,35 @@
+﻿td.assigned {
+    background-color: #dbf0ee !important; /* bardzo jasny odcień tej samej zieleni */
+    color: #115e59; /* oryginalny, mocny kolor jako tekst — dobry kontrast */
+}
+
+    td.assigned:hover {
+        background-color: #c9e8e6 !important; /* odrobinę ciemniejszy odcień na hover */
+    }
+
+/* Linia w komórkach assigned, dopasowana do tej samej gamy barw */
+td.assigned {
+    border-color: #a6d9d5 !important;
+}
+/* Subtelne, ale wyraźniejsze linie tabeli */
+.table {
+    border-collapse: collapse !important;
+}
+
+    .table th,
+    .table td {
+        border: 1px solid #cbd5e1 !important; /* trochę mocniejszy szary niż #e2e8f0 */
+        vertical-align: middle;
+    }
+
+/* Trochę mocniejsza linia nagłówka */
+.table thead th {
+    background-color: #f8fafc;
+    border-bottom: 2px solid #94a3b8 !important; /* mocniejsza niż wcześniej */
+    font-weight: 600;
+}
+
+/* Hover na wierszu */
+.table tbody tr:hover {
+    background-color: #f8fafc !important;
+}

@@ -90,5 +90,25 @@ namespace PlanningApp.Services
 
             return !alreadyAssigned;
         }
+
+        public async Task UnassignEmployeeAsync(DateTime workDate, int shift, int productionLineId, string position) 
+        {
+            var start = workDate.Date;
+            var end = start.AddDays(1);
+
+            await using var context = _contextFactory.CreateDbContext();
+
+            var assignment = await context.ScheduleAssignments
+            .FirstOrDefaultAsync(x => x.WorkDate >= start && x.WorkDate < end &&
+                x.Shift == shift &&
+                x.ProductionLineId == productionLineId &&
+                x.PositionOnLine == position);
+
+            if (assignment != null) 
+            {
+                context.ScheduleAssignments.Remove(assignment);
+                await context.SaveChangesAsync();
+            }
+        }
     }
 }
