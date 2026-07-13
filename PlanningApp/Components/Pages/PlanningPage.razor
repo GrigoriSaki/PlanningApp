@@ -1,6 +1,7 @@
 ﻿@using PlanningApp.Services
 @using PlanningApp.Models
 @using PlanningApp.Planning
+@using System.Globalization;
 
 @page "/planning"
 @inject PlanningService PlanningService
@@ -23,13 +24,11 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		assignments = await PlanningService.GetWeekPlanningAsync(selectedWeek);
-
 		employees = await EmployeeService.GetAllAsync();
 
 		productionLines = await ProductionLineService.GetAllAsync();
 
-		monday = GetStartOfWeek(DateTime.Today);
+		await LoadWeek();
 	}
 	private DateTime GetStartOfWeek(DateTime date)
 	{
@@ -108,7 +107,7 @@
 	{
 		if (selectedCell == null)
 			return;
-		
+
 		await PlanningService.UnassignEmployeeAsync(
 				selectedCell.WorkDate,
 				selectedCell.Shift,
@@ -119,6 +118,23 @@
 		selectedCell = null;
 		ClosePopup();
 	}
+
+	private async Task LoadWeek()
+	{
+		monday = GetStartOfWeek(selectedWeek);
+		assignments = await PlanningService.GetWeekPlanningAsync(selectedWeek);
+	}
+
+	private async Task PreviousWeek()
+	{
+		selectedWeek = selectedWeek.AddDays(-7);
+		await LoadWeek();
+	}
+	private async Task NextWeek()
+	{
+		selectedWeek = selectedWeek.AddDays(+7);
+		await LoadWeek();
+	}
 }
 
 <div class="container-fluid px-4 pt-2">
@@ -127,13 +143,15 @@
 		<h5 class="text-dark mb-0 me-2">Week:</h5>
 		<button type="button"
 				class="btn btn-sm d-flex align-items-center justify-content-center"
-				style="background-color: #dbf0ee; color: #115e59; border: 1px solid #a6d9d5; width: 28px; height: 28px; padding: 0;">
+				style="background-color: #dbf0ee; color: #115e59; border: 1px solid #a6d9d5; width: 28px; height: 28px; padding: 0;"
+				@onclick="PreviousWeek">
 			<i class="bi bi-chevron-left"></i>
 		</button>
 		<h5 class="text-dark mb-0">@monday.ToString("dd.MM.yyyy") - @monday.AddDays(6).ToString("dd.MM.yyyy")</h5>
 		<button type="button"
 				class="btn btn-sm d-flex align-items-center justify-content-center"
-				style="background-color: #dbf0ee; color: #115e59; border: 1px solid #a6d9d5; width: 28px; height: 28px; padding: 0;">
+				style="background-color: #dbf0ee; color: #115e59; border: 1px solid #a6d9d5; width: 28px; height: 28px; padding: 0;"
+				@onclick="NextWeek">
 			<i class="bi bi-chevron-right"></i>
 		</button>
 	</div>
@@ -149,7 +167,7 @@
 					@foreach (var day in WeekDays)
 					{
 						<th>
-							@day.ToString("ddd")
+							@day.ToString("ddd", CultureInfo.GetCultureInfo("en-US"))
 							<br />
 							<span class="fw-light text-muted" style="font-size: 0.95rem;">
 								@day.ToString("dd.MM")
