@@ -26,10 +26,12 @@ namespace PlanningApp.Services
             await context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(Employee employee) 
+        public async Task DeactiveAsync(Employee employee) 
         {
             await using var context = _contextFactory.CreateDbContext();
-            context.Employees.Remove(employee);
+            var employeToDelete = await context.Employees.FirstOrDefaultAsync(x => x.Id == employee.Id);
+            if (employeToDelete == null) { return; }
+            employeToDelete.IsActive = false;
             await context.SaveChangesAsync();
         }
 

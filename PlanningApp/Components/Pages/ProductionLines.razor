@@ -26,7 +26,7 @@
 
 		if (confirmed)
 		{
-			await ProductionLineService.DeleteAsync(lineToDelete);
+			await ProductionLineService.DeactivateAsync(lineToDelete);
 			productionLines = await ProductionLineService.GetAllAsync();
 		}
 	}
@@ -81,15 +81,6 @@
 						   @bind-Value="formLines.Name" />
 			</div>
 
-			<div class="form-check mb-3">
-
-				<InputCheckbox class="form-check-input"
-							   @bind-Value="formLines.IsActive" />
-
-				<label class="form-check-label">
-					Active
-				</label>
-			</div>
 			<button class="btn @(isEditing ? "btn-success" : "btn-primary")">
 				@(isEditing ? "Update Line" : "Add Line")
 			</button>
@@ -109,38 +100,27 @@
 		<thead>
 			<tr>
 				<th>Name</th>
-				<th>IsActive</th>
 			</tr>
 		</thead>
 
 		<tbody>
 			@foreach (var e in productionLines)
 			{
-				<tr>
-					<td>@e.Name</td>
-					<td class="align-middle">
-						@if (e.IsActive)
-						{
-							<span class="badge rounded-circle bg-success p-2 d-inline-block"
-								  style="width: 12px; height: 12px;"
-								  title="Active"></span>
-						}
-						else
-						{
-							<span class="badge rounded-circle bg-danger p-2 d-inline-block"
-								  style="width: 12px; height: 12px;"
-								  title="Inactive"></span>
-						}
-					</td>
-					<td class="text-end">
-						<button class="btn btn-danger" @onclick="() => DeleteLine(e)">
-							Delete
-						</button>
-						<button class="btn btn-secondary" @onclick="() => EditLine(e)">
-							Edit
-						</button>
-					</td>
-				</tr>
+				if (e.IsActive == true)
+				{
+
+					<tr>
+						<td>@e.Name</td>
+						<td class="text-end">
+							<button class="btn btn-danger" @onclick="() => DeleteLine(e)">
+								Delete
+							</button>
+							<button class="btn btn-secondary" @onclick="() => EditLine(e)">
+								Edit
+							</button>
+						</td>
+					</tr>
+				}
 			}
 		</tbody>
 	</table>

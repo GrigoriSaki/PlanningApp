@@ -13,6 +13,17 @@
 	private List<Employee> employees = new();
 	private Employee formEmployee = new Employee();
 	private bool isEditing = false;
+	private List<String> AvailablePositions = new()
+	{
+		"Team Leader",
+		"Line operator",
+		"Sticker operator",
+		"Machine operator",
+		"Transporter",
+		"Quality",
+		"Cleaner",
+		"Worker"
+	};
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -30,7 +41,7 @@
 
 		if (confirmed)
 		{
-			await EmployeeService.DeleteAsync(employeeToDelete);
+			await EmployeeService.DeactiveAsync(employeeToDelete);
 			employees = await EmployeeService.GetAllAsync();
 		}
 	}
@@ -92,21 +103,16 @@
 			@bind-Value="formEmployee.LastName"/>
 	</div>
 
-	<div class="mb-3">
-		<label class="form-label">Default Position</label>
-		<InputText class="form-control"
-			@bind-Value="formEmployee.DefaultPosition" />
-	</div>
-
-	<div class="form-check mb-3">
-
-		<InputCheckbox class="form-check-input"
-			@bind-Value="formEmployee.IsActive"/>
-
-			<label class="form-check-label">
-				Active
-			</label>
-	</div>
+			<div class="mb-3">
+				<label class="form-label fw-bold">Default Position</label>
+				<InputSelect class="form-select" @bind-Value="formEmployee.DefaultPosition">
+					<option value="" disabled selected hidden> Select Position </option>
+					@foreach (var position in AvailablePositions)
+					{
+						<option value="@position">@position</option>
+					}
+				</InputSelect>
+			</div>
 				<button class="btn @(isEditing ? "btn-success" : "btn-primary")">
 					@(isEditing ? "Update Employee" : "Add Employee")
 				</button>
@@ -126,41 +132,29 @@
 			<th>First Name</th>
 			<th>Last Name</th>
 			<th>Default Position</th>
-			<th>IsActive</th>
 		</tr>
 	</thead>
 
 	<tbody>
 @foreach (var e in employees)
-		{
-			<tr>
-				<td>@e.FirstName</td>
-				<td>@e.LastName</td>
-				<td>@e.DefaultPosition</td>
-					<td class="align-middle">
-						@if (e.IsActive)
-						{
-							<span class="badge rounded-circle bg-success p-2 d-inline-block"
-								  style="width: 12px; height: 12px;"
-								  title="Active"></span>
-						}
-						else
-						{
-							<span class="badge rounded-circle bg-danger p-2 d-inline-block"
-								  style="width: 12px; height: 12px;"
-								  title="Inactive"></span>
-						}
-					</td>
-				<td class="text-end">
-						<button class="btn btn-danger" @onclick="() => DeleteEmployee(e)">
-							Delete
-						</button>
-					<button class="btn btn-secondary" @onclick="() => EditEmployee(e)">
-						Edit
-					</button>
-				</td>
-			</tr>
-		}
-	</tbody>
+				if (e.IsActive == true)
+				{
+					{
+						<tr>
+							<td>@e.FirstName</td>
+							<td>@e.LastName</td>
+							<td>@e.DefaultPosition</td>
+							<td class="text-end">
+								<button class="btn btn-danger" @onclick="() => DeleteEmployee(e)">
+									Delete
+								</button>
+								<button class="btn btn-secondary" @onclick="() => EditEmployee(e)">
+									Edit
+								</button>
+							</td>
+						</tr>
+					}
+				}
+		</tbody>
 	</table>
 </div>

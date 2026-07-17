@@ -12,10 +12,16 @@ namespace PlanningApp.Services
         {
             _contextFactory = context;
         }
+
+        private static DateTime GetStartOfWeek(DateTime date)
+        {
+            int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+            return date.AddDays(-diff).Date;
+        }
         public async Task<List<Models.ScheduleAssignment>> GetWeekPlanningAsync(DateTime anyDayInWeek) 
         {
-            int diff = (7 + (anyDayInWeek.DayOfWeek - DayOfWeek.Monday)) % 7;
-            DateTime startOfWeek = anyDayInWeek.AddDays(-diff).Date;
+
+            DateTime startOfWeek = GetStartOfWeek(anyDayInWeek);
             DateTime endOfWeek = startOfWeek.AddDays(7).Date;
 
             await using var context = _contextFactory.CreateDbContext();
@@ -31,7 +37,7 @@ namespace PlanningApp.Services
         }
 
         //Przypisanie pracownika z imienia i nazwiska do konkretnej komórki w planingu
-        public async Task AssignEmployeeAsync(DateTime workDate, int shift, int productionLineId, string position, int? employeeId) 
+        public async Task<bool> AssignEmployeeAsync(DateTime workDate, int shift, int productionLineId, string position, int? employeeId) 
         {
             var start = workDate.Date;  
 
@@ -41,8 +47,7 @@ namespace PlanningApp.Services
 
                 if (!canAssign) 
                 {
-                    throw new InvalidOperationException(
-                    "Employee is already assigned to another shift on this day.");
+                    return false;
                 }
             }
 
@@ -72,6 +77,7 @@ namespace PlanningApp.Services
                 assignment.EmployeeId = employeeId; 
             }
             await context.SaveChangesAsync();
+            return true;
         }
 
         //Walidacja przed przypisaniem pracownika
@@ -109,6 +115,39 @@ namespace PlanningApp.Services
                 context.ScheduleAssignments.Remove(assignment);
                 await context.SaveChangesAsync();
             }
+        }
+
+        //Funkcja kopiująca harmonogra na kolejny tydzien
+        public async Task<bool> CopyToNextWeekAsync(DateTime anyDayInWeek)
+        {
+            var assignments = await GetWeekPlanningAsync(anyDayInWeek);
+            await using var context = _contextFactory.CreateDbContext();
+
+            DateTime startOfWeek = GetStartOfWeek(anyDayInWeek);
+            DateTime nextWeekStart = startOfWeek.AddDays(7);
+            DateTime nextWeekEnd = nextWeekStart.AddDays(7);
+
+            bool exists = await context.ScheduleAssignments.AnyAsync(x =>
+                x.WorkDate >= nextWeekStart &&
+                x.WorkDate < nextWeekEnd);
+
+            if (exists)
+                return false;
+
+            foreach (var assignment in assignments)
+            {
+                context.ScheduleAssignments.Add(new ScheduleAssignment
+                {
+                    WorkDate = assignment.WorkDate.AddDays(7),
+                    Shift = assignment.Shift,
+                    ProductionLineId = assignment.ProductionLineId,
+                    PositionOnLine = assignment.PositionOnLine,
+                    EmployeeId = assignment.EmployeeId
+                });
+            }
+
+            await context.SaveChangesAsync();
+            return true;
         }
     }
 }

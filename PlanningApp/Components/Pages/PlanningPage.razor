@@ -21,6 +21,8 @@
 	private bool isPopupVisible = false;
 	private double mouseX;
 	private double mouseY;
+	private bool showSecondShift = false;
+	private string? errorMessage;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -84,6 +86,7 @@
 	private void ClosePopup()
 	{
 		isPopupVisible = false;
+		errorMessage = null;
 	}
 
 	private async Task AssignEmployee(int employeeId)
@@ -91,12 +94,18 @@
 		if (selectedCell == null)
 			return;
 
-		await PlanningService.AssignEmployeeAsync(
+		bool result = await PlanningService.AssignEmployeeAsync(
 		selectedCell.WorkDate,
 		selectedCell.Shift,
 		selectedCell.ProductionLineId,
 		selectedCell.Position,
 		employeeId);
+
+		if (!result)
+		{
+			errorMessage = "Employee is already assigned to another shift on this day.";
+			return;
+		}
 
 		assignments = await PlanningService.GetWeekPlanningAsync(selectedWeek);
 		selectedCell = null;
@@ -123,6 +132,7 @@
 	{
 		monday = GetStartOfWeek(selectedWeek);
 		assignments = await PlanningService.GetWeekPlanningAsync(selectedWeek);
+		showSecondShift = assignments.Any(x => x.Shift == 2);
 	}
 
 	private async Task PreviousWeek()
@@ -135,6 +145,36 @@
 		selectedWeek = selectedWeek.AddDays(+7);
 		await LoadWeek();
 	}
+	private void ShowSecondShift()
+	{
+		showSecondShift = true;
+	}
+	private async Task CopyToNextWeek()
+	{
+		bool confirm = await JS.InvokeAsync<bool>(
+	  "confirm",
+	  "Are you sure you want to copy this schedule to next week?"
+  );
+
+		if (!confirm)
+			return;
+
+		bool success = await PlanningService.CopyToNextWeekAsync(selectedWeek);
+
+		if (!success)
+		{
+			await JS.InvokeAsync<bool>(
+				"confirm",
+				"Next week already contains schedule."
+			);
+
+			return;
+		}
+
+		await LoadWeek();
+	}
+
+	
 }
 
 <div class="container-fluid px-4 pt-2">
@@ -154,56 +194,140 @@
 				@onclick="NextWeek">
 			<i class="bi bi-chevron-right"></i>
 		</button>
+		<button type="button"
+				class="btn btn-link text-decoration-underline p-0 d-inline-flex align-items-center gap-2 ms-2"
+				style="color: #115e59; font-weight: 500; font-size: 0.95rem;" @onclick="CopyToNextWeek">
+			 Copy to next week 
+		</button>
 	</div>
 
 	@foreach (var line in productionLines)
 	{
-		<h3>line: @line.Name</h3>
-		<table class="table table-bordered table-hover">
-			<thead>
-				<tr>
-					<th style="width: 200px;">Position</th>
-
-					@foreach (var day in WeekDays)
-					{
-						<th>
-							@day.ToString("ddd", CultureInfo.GetCultureInfo("en-US"))
-							<br />
-							<span class="fw-light text-muted" style="font-size: 0.95rem;">
-								@day.ToString("dd.MM")
-							</span>
-						</th>
-					}
-				</tr>
-			</thead>
-			<tbody>
-				@foreach (var position in PlanningPositions.All)
-				{
+		if (line.IsActive == true)
+		{
+			<h3>line: @line.Name</h3>
+			<table class="table table-bordered table-hover">
+				<thead>
 					<tr>
-						<th scope="row">@position</th>
+						<th style="width: 200px;">Position</th>
 
 						@foreach (var day in WeekDays)
 						{
-							var currentDay = day;
-							var assignment = GetAssignment(day, 1, line.Id, position);
-							<td @onclick="(e) => SelectCell(e,currentDay, 1, line.Id, position)" style="cursor: pointer;"
-								class="position-relative @(assignment != null ? "assigned" : "")">
-
-								@if (assignment != null)
-								{
-									@assignment.Employee.FirstName
-								}
-								else
-								{
-									<span class="text-muted">&nbsp;</span>
-								}
-							</td>
+							<th>
+								@day.ToString("ddd", CultureInfo.GetCultureInfo("en-US"))
+								<br />
+								<span class="fw-light text-muted" style="font-size: 0.95rem;">
+									@day.ToString("dd.MM")
+								</span>
+							</th>
 						}
 					</tr>
-				}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					@foreach (var position in PlanningPositions.All)
+					{
+						<tr>
+							<th scope="row">@position</th>
+
+							@foreach (var day in WeekDays)
+							{
+								var currentDay = day;
+								var assignment = GetAssignment(day, 1, line.Id, position);
+								<td @onclick="(e) => SelectCell(e, currentDay, 1, line.Id, position)" style="cursor: pointer;"
+									class="position-relative @(assignment != null ? "assigned" : "")">
+
+									@if (assignment != null)
+									{
+										@assignment.Employee.FirstName
+									}
+									else
+									{
+										<span class="text-muted">&nbsp;</span>
+									}
+								</td>
+							}
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
 	}
+	@if (showSecondShift)
+	{
+		<div class="d-flex justify-content-center align-items-center" style="height: 100px;">
+			<h3>Shift 2</h3>
+		</div>
+		@foreach (var line in productionLines)
+		{
+			if (line.IsActive == true)
+			{
+
+				<h3>line: @line.Name</h3>
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<th style="width: 200px;">Position</th>
+
+							@foreach (var day in WeekDays)
+							{
+								<th>
+									@day.ToString("ddd", CultureInfo.GetCultureInfo("en-US"))
+									<br />
+									<span class="fw-light text-muted" style="font-size: 0.95rem;">
+										@day.ToString("dd.MM")
+									</span>
+								</th>
+							}
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var position in PlanningPositions.All)
+						{
+							<tr>
+								<th scope="row">@position</th>
+
+								@foreach (var day in WeekDays)
+								{
+									var currentDay = day;
+									var assignment = GetAssignment(day, 2, line.Id, position);
+									<td @onclick="(e) => SelectCell(e, currentDay, 2, line.Id, position)" style="cursor: pointer;"
+										class="position-relative @(assignment != null ? "assigned" : "")">
+
+										@if (assignment != null)
+										{
+											@assignment.Employee.FirstName
+										}
+										else
+										{
+											<span class="text-muted">&nbsp;</span>
+										}
+									</td>
+								}
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		}
+	}
+	<div class="d-flex justify-content-center align-items-center" style="height: 100px;">
+		@if (!showSecondShift && productionLines.Any(x => x.IsActive))
+		{
+			<button type="button" class="btn btn-primary ms-2" @onclick="()=>ShowSecondShift()">
+				+ Add Shift
+			</button>
+		}
+		
+		@if (!productionLines.Any(x => x.IsActive))
+		{
+			<div class="alert alert-info d-flex align-items-center" role="alert">
+				<span class="fs-5 me-3">ℹ️</span>
+				<div>
+					No lines to display. Add a new line to get started.
+				</div>
+			</div>
+		}
+	</div>
 	@if (isPopupVisible)
 	{
 		<div @onclick="ClosePopup"
@@ -221,6 +345,14 @@
 				<button type="button" class="btn-close ms-3" style="font-size: 0.75rem;" @onclick="ClosePopup"></button>
 			</div>
 			<div class="list-group list-group-flush small" style="max-height: 200px; overflow-y: auto;">
+
+				@if (errorMessage != null)
+				{
+					<div class="alert alert-warning m-2 p-2">
+						@errorMessage
+					</div>
+				}
+
 				@if (GetAssignment(
 					selectedCell.WorkDate,
 					selectedCell.Shift,
@@ -231,14 +363,18 @@
 						Unassign
 					</button>				
 				}
+
 				@foreach (var employee in employees)
-				{
-					<button type="button"
-							class="list-group-item list-group-item-action py-1 px-2"
-							@onclick="() => AssignEmployee(employee.Id)">
-						@employee.FirstName @employee.LastName
-					</button>
-				}
+					if (employee.IsActive == true)
+					{
+						{
+							<button type="button"
+									class="list-group-item list-group-item-action py-1 px-2"
+									@onclick="() => AssignEmployee(employee.Id)">
+								@employee.FirstName @employee.LastName
+							</button>
+						}
+					}
 			</div>
 		</div>
 	}

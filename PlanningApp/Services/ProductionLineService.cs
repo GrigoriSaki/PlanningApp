@@ -24,10 +24,12 @@ namespace PlanningApp.Services
             context.ProductionLines.Add(productionLine);
             await context.SaveChangesAsync();
         }
-        public async Task DeleteAsync(ProductionLine productionLine)
+        public async Task DeactivateAsync(ProductionLine productionLine)
         {
             await using var context = _contextFactory.CreateDbContext();
-            context.ProductionLines.Remove(productionLine);
+            var lineToDelete = await context.ProductionLines.FirstOrDefaultAsync(x => x.Id == productionLine.Id);
+            if (lineToDelete == null) { return; }
+            lineToDelete.IsActive = false;
             await context.SaveChangesAsync();
         }
         public async Task EditAsync(ProductionLine productionLine)
